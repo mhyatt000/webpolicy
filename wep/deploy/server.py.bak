@@ -1,0 +1,212 @@
+import os
+import os.path as osp
+import time
+import traceback
+from collections import deque
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Callable, Dict, Optional, Protocol, Union
+
+import jax
+import json_numpy
+
+json_numpy.patch()
+import numpy as np
+import tyro
+import uvicorn
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from rich.pretty import pprint
+
+
+@dataclass
+class Args:
+    host: str = "0.0.0.0"
+    port: int = 8000
+
+    # env: EnvMode = EnvMode.ALOHA_SIM
+    num_steps: int = 10
+
+
+def json_response(obj):
+    return JSONResponse(json_numpy.dumps(obj))
+
+
+class Server:
+    """
+    A server for hosting a CrossFormer model for inference.
+
+    On action server: pip install uvicorn fastapi json-numpy
+    On client: pip install requests json-numpy
+
+    On client:
+
+    import requests
+    import json_numpy
+    from json_numpy import loads
+    json_numpy.patch()
+
+    Reset and provide the task before starting the rollout:
+
+    requests.post("http://serverip:port/reset", json={"text": ...})
+
+    Sample an action:
+
+    action = loads(
+        requests.post(
+            "http://serverip:port/query",
+            json={"observation": ...},
+        ).json()
+    )
+    """
+
+
+# def resize(img, size=(224, 224)):
+# img = tf.image.resize(img, size=size, method="lanczos3", antialias=True)
+# return tf.cast(tf.clip_by_value(tf.round(img), 0, 255), tf.uint8).numpy()
+
+
+def stack_and_pad(history: deque, num_obs: int):
+    """
+    Converts a list of observation dictionaries (`history`) into a single observation dictionary
+    by stacking the values. Adds a padding mask to the observation that denotes which timesteps
+    represent padding based on the number of observations seen so far (`num_obs`).
+    """
+    horizon = len(history)
+    full_obs = {k: np.stack([dic[k] for dic in history]) for k in history[0]}
+    pad_length = horizon - min(num_obs, horizon)
+    timestep_pad_mask = np.ones(horizon)
+    timestep_pad_mask[:pad_length] = 0
+    full_obs["timestep_pad_mask"] = timestep_pad_mask
+    return full_obs
+
+
+@dataclass
+class ServerCN:
+    """Server configuration"""
+
+    models: Union[str, list]  # comma separated models as name : id : step
+    task: str = tyro.MISSING  # task to perform
+
+    # path to BAFL_SAVE or weights dir
+    weights: Union[str, Path] = os.environ.get("BAFL_SAVE", ".")
+
+    host: str = "0.0.0.0"  # host to run on
+    port: int = 8001  # port to run on
+
+    def __post_init__(self):
+
+        assert self.models, "Please provide a model"
+        assert self.task, "Please provide a task"
+        if isinstance(self.models, str):
+            self.models = [m.split(":") for m in self.models.split(",")]
+
+        self.weights = Path(self.weights).expanduser()
+        pprint(self.models)
+        self.models = [(n, str(self.weights / id), s) for n, id, s in self.models]
+
+
+class Policy(Protocol):
+    def __call__(self, obs: Dict[str, Any]) -> Dict[str, Any]:
+        pass
+
+    def reset(self, payload: Dict[str, Any]):
+        pass
+
+
+class DummyPolicy(Policy):
+    def __call__(self, obs: Dict[str, Any]) -> Dict[str, Any]:
+        return {"action": np.zeros((1, 5))}
+
+    def reset(self, payload: Dict[str, Any]):
+        pass
+
+
+class EnsemblePolicy(Policy):
+    """action ensembling"""
+
+    chunk = 5  # return actions from the underlying policy in chunks of 5
+    pass
+
+
+class HistoryPolicy(Policy):
+    pass
+
+
+class PolicySelecorPolicy(Policy):
+    """in the event you serve or query multiple models"""
+
+    pass
+
+
+class HttpServer:
+    def __init__(self, policy: Callable, cfg: Optional[ServerCN] = None):
+
+        self.cfg = cfg
+        self.policy = policy
+
+        self.chunk = 4
+
+        self.exp_weight = 0
+        self.horizon = 1  # 5
+        self.task = None
+        self.rng = jax.random.PRNGKey(0)
+
+        self.reset_history()
+
+    def run(self, port=8001, host="0.0.0.0"):
+        self.app = FastAPI()
+        self.app.post("/query")(self.step)
+        self.app.post("/reset")(self.reset)
+        uvicorn.run(self.app, host=host, port=port)
+
+    def reset_history(self):
+        self.history = deque(maxlen=self.horizon)
+        self.num_obs = 0
+        self.act_history = deque(maxlen=self.chunk)
+
+    def reset(self, payload: Dict[Any, Any]):
+        policy.reset(payload)
+        self.reset_history()
+        return "reset"
+
+    def step(self, payload: Dict[Any, Any]):
+        try:
+
+            model_name = payload.get("model", "crossformer")
+
+            obs = payload["observation"]
+            self.history.append(obs)
+            self.num_obs += 1
+            obs = stack_and_pad(self.history, self.num_obs)
+
+            # add batch dim
+            obs = jax.tree.map(lambda x: x[None], obs)
+
+            action = self.model(payload["observation"])
+            self.act_history.append(action)
+            return json_response(action)
+        except:
+            print(traceback.format_exc())
+            return "error"
+
+
+def main(cfg: ServerCN):
+
+    # DEPRICATE name, path, step
+    # root = osp.expanduser("~/data/bafl") # for carina
+    # paths = [
+    # ("crossformer", "hf://rail-berkeley/crossformer", None),
+    # v3
+    # ("bafl", osp.join(root, "experiment_20241203_193649"), 14_000), # v3-lift
+    # ("bafl", osp.join(root, "experiment_20241204_141047"), 150_000), # v3-lift
+    # ("bafl", osp.join(root, "experiment_20241211_173647"), 290_000),  # v3-lift
+    # ]
+
+    policy = DummyPolicy()
+    server = HttpServer(policy, cfg=cfg)
+    server.run(cfg.port, cfg.host)
+
+
+if __name__ == "__main__":
+    main(tyro.cli(ServerCN))
