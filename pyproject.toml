@@ -17,7 +17,7 @@ dependencies = [
     "msgpack>=1.1.0",
     "numpy>=1.23.5,<2.0", # avoid numpy 2.0 for maybe tensorflow
     "rich>=14.0.0",
-    "tyro>=0.9.19",
+    "tyro",
     "websockets>=15.0.1",
 ]
 

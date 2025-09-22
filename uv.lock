@@ -387,7 +387,7 @@ requires-dist = [
     { name = "msgpack", specifier = ">=1.1.0" },
     { name = "numpy", specifier = ">=1.23.5,<2.0" },
     { name = "rich", specifier = ">=14.0.0" },
-    { name = "tyro", specifier = ">=0.9.19" },
+    { name = "tyro" },
     { name = "websockets", specifier = ">=15.0.1" },
 ]
 
