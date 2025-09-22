@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-import tree
+import jax
 
 import msgpack_numpy
 
@@ -42,4 +42,4 @@ def _check(expected, actual):
 def test_pack_unpack(data):
     packed = msgpack_numpy.packb(data)
     unpacked = msgpack_numpy.unpackb(packed)
-    tree.map_structure(_check, data, unpacked)
+    jax.tree.map(_check, data, unpacked)

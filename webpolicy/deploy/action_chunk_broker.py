@@ -1,7 +1,7 @@
 from typing import Dict
 
 import numpy as np
-import tree
+import jax
 from typing_extensions import override
 
 import base_policy as _base_policy
@@ -30,7 +30,7 @@ class ActionChunkBroker(_base_policy.BasePolicy):
             self._last_results = self._policy.infer(obs)
             self._cur_step = 0
 
-        results = tree.map_structure(lambda x: x[self._cur_step, ...], self._last_results)
+        results = jax.tree.map(lambda x: x[self._cur_step, ...], self._last_results)
         self._cur_step += 1
 
         if self._cur_step >= self._action_horizon:
