@@ -1,3 +1,10 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+# https://docs.astral.sh/uv/concepts/projects/config/#build-systems
+# https://docs.astral.sh/uv/concepts/projects/config/#build-isolation
+
+
 [project]
 name = "webpolicy"
 version = "0.1.0"
@@ -7,8 +14,16 @@ requires-python = ">=3.11"
 dependencies = [
     "dm-tree>=0.1.9",
     "msgpack>=1.1.0",
-    "numpy>=2.1.0",
+    "numpy>=1.23.5",
     "rich>=14.0.0",
     "tyro>=0.9.19",
     "websockets>=15.0.1",
 ]
+
+[dependency-groups]
+dev = [
+    "webpolicy",
+]
+
+[tool.uv.sources]
+webpolicy = { workspace = true }
