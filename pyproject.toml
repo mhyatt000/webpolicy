@@ -12,10 +12,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "jax>=0.5.3",
+    "jax>=0.5.2",
     "jaxlib>=0.5.3",
     "msgpack>=1.1.0",
-    "numpy>=1.23.5,<2.0", # avoid numpy 2.0 for maybe tensorflow
+    "numpy>=1.23.5",
     "rich>=14.0.0",
     "tyro",
     "websockets>=15.0.1",
