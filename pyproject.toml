@@ -12,8 +12,15 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "jax>=0.5.2",
-    "jaxlib>=0.5.3",
+    # Linux (x86_64 or aarch64): JAX 0.5.x
+    'jax>=0.5.2; platform_system == "Linux"',
+    'jaxlib>=0.5.3; platform_system == "Linux"',
+    # macOS ARM (Apple Silicon): JAX 0.5.x
+    'jax>=0.5.2; platform_system == "Darwin" and platform_machine == "arm64"',
+    'jaxlib>=0.5.3; platform_system == "Darwin" and platform_machine == "arm64"',
+    # macOS Intel: pin to 0.4.38
+    'jax==0.4.38; platform_system == "Darwin" and platform_machine == "x86_64"',
+    'jaxlib==0.4.38; platform_system == "Darwin" and platform_machine == "x86_64"',
     "msgpack>=1.1.0",
     "numpy>=1.23.5",
     "rich>=14.0.0",
