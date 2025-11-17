@@ -6,7 +6,7 @@ import time
 import numpy as np
 import tyro
 
-from webpolicy.deploy.client import WebsocketClientPolicy
+from webpolicy.client import WebsocketClientPolicy
 
 
 class EnvMode(enum.Enum):

@@ -7,8 +7,8 @@ from rich.pretty import pprint
 import numpy as np
 import tyro
 
-from webpolicy.deploy.base_policy import BasePolicy
-from webpolicy.deploy.server import WebsocketPolicyServer
+from webpolicy.base_policy import BasePolicy
+from webpolicy.server import WebsocketPolicyServer
 
 
 @dataclasses.dataclass
