@@ -23,7 +23,7 @@ class Args:
 
 class DummyPolicy(BasePolicy):
 
-    def infer(self, obs: dict) -> dict:
+    def step(self, obs: dict) -> dict:
         """Dummy inference function that returns the observation."""
         pass
 
