@@ -1,8 +1,8 @@
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
-# https://docs.astral.sh/uv/concepts/projects/config/#build-systems
-# https://docs.astral.sh/uv/concepts/projects/config/#build-isolation
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+[tool.hatch.build.targets.wheel]
+packages = ["src/webpolicy"]
 
 
 [project]
