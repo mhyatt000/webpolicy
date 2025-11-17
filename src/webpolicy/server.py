@@ -8,10 +8,10 @@ import websockets.asyncio.server
 import websockets.frames
 
 
-class WebsocketPolicyServer:
+class Server:
     """Serves a policy using the websocket protocol. See websocket_client_policy.py for a client implementation.
 
-    Currently only implements the `load` and `infer` methods.
+    Currently only implements the `load` and `step` methods.
     """
 
     def __init__(
@@ -27,7 +27,7 @@ class WebsocketPolicyServer:
         self._metadata = metadata or {}
         logging.getLogger("websockets.server").setLevel(logging.INFO)
 
-    def serve_forever(self) -> None:
+    def serve(self) -> None:
         asyncio.run(self.run())
 
     async def run(self):
@@ -49,7 +49,7 @@ class WebsocketPolicyServer:
         while True:
             try:
                 obs = msgpack_numpy.unpackb(await websocket.recv())
-                action = self._policy.infer(obs)
+                action = self._policy.step(obs)
                 await websocket.send(packer.pack(action))
             except websockets.ConnectionClosed:
                 logging.info(f"Connection from {websocket.remote_address} closed")

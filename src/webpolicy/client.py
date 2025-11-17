@@ -9,7 +9,7 @@ from . import base_policy as _base_policy
 from . import msgpack_numpy
 
 
-class WebsocketClientPolicy(_base_policy.BasePolicy):
+class Client(_base_policy.BasePolicy):
     """Implements the Policy interface by communicating with a server over websocket.
 
     See WebsocketPolicyServer for a corresponding server implementation.
@@ -35,7 +35,7 @@ class WebsocketClientPolicy(_base_policy.BasePolicy):
                 time.sleep(5)
 
     @override
-    def infer(self, obs: Dict) -> Dict:  # noqa: UP006
+    def step(self, obs: Dict) -> Dict:  # noqa: UP006
         data = self._packer.pack(obs)
         self._ws.send(data)
         response = self._ws.recv()

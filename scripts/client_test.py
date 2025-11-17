@@ -6,7 +6,7 @@ import time
 import numpy as np
 import tyro
 
-from webpolicy.client import WebsocketClientPolicy
+from webpolicy.client import Client
 
 
 class EnvMode(enum.Enum):
@@ -35,16 +35,11 @@ def main(args: Args) -> None:
         EnvMode.LIBERO: _random_observation_libero,
     }[args.env]
 
-    policy = WebsocketClientPolicy(
-        host=args.host,
-        port=args.port,
-    )
+    policy = Client( host=args.host, port=args.port)
     logging.info(f"Server metadata: {policy.get_server_metadata()}")
 
-    quit()
-
     # Send 1 observation to make sure the model is loaded.
-    policy.infer(obs_fn())
+    policy.step(obs_fn())
 
     start = time.time()
     for _ in range(args.num_steps):

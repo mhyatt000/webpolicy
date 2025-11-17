@@ -8,7 +8,7 @@ import numpy as np
 import tyro
 
 from webpolicy.base_policy import BasePolicy
-from webpolicy.server import WebsocketPolicyServer
+from webpolicy.server import Server
 
 
 @dataclasses.dataclass
@@ -36,13 +36,9 @@ def main(cfg: Args) -> None:
     pprint(cfg)
 
     policy = DummyPolicy()
-    server = WebsocketPolicyServer(
-        policy=policy,
-        host=cfg.host,
-        port=cfg.port,
-        # metadata=policy_metadata,
-    )
-    server.serve_forever()
+    server = Server( policy=policy, host=cfg.host, port=cfg.port)
+    # metadata=policy_metadata,
+    server.serve()
 
 
 if __name__ == "__main__":
