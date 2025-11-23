@@ -28,6 +28,9 @@ class Server:
         self._metadata = metadata or {}
         logging.getLogger("websockets.server").setLevel(logging.INFO)
 
+    def start(self) -> None:
+        self.serve()
+
     def serve(self) -> None:
         print(f"Starting server on ws://{self._host}:{self._port}")
         asyncio.run(self.run())
