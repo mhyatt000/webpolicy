@@ -1,4 +1,5 @@
 import asyncio
+import rich
 import logging
 import traceback
 
@@ -28,6 +29,7 @@ class Server:
         logging.getLogger("websockets.server").setLevel(logging.INFO)
 
     def serve(self) -> None:
+        print(f"Starting server on ws://{self._host}:{self._port}")
         asyncio.run(self.run())
 
     async def run(self):
