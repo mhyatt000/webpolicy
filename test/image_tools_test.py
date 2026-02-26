@@ -1,6 +1,6 @@
 import numpy as np
 
-import image_tools as image_tools
+from webpolicy import image_tools
 
 
 def test_resize_with_pad_shapes():

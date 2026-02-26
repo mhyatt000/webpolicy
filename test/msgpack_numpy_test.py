@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import jax
 
-import msgpack_numpy
+from webpolicy import msgpack_numpy
 
 
 def _check(expected, actual):
