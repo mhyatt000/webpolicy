@@ -8,6 +8,12 @@ from . import msgpack_numpy
 import websockets.asyncio.server
 import websockets.frames
 
+_OP_KEY = "__webpolicy_op__"
+_OP_STEP = "step"
+_OP_RESET = "reset"
+_ACTION_KEY = "action"
+_RESET_ACK_KEY = "__webpolicy_reset_ack__"
+
 
 class Server:
     """Serves a policy using the websocket protocol. See websocket_client_policy.py for a client implementation.
@@ -53,8 +59,21 @@ class Server:
 
         while True:
             try:
-                obs = msgpack_numpy.unpackb(await websocket.recv())
-                action = self._policy.step(obs)
+                payload = msgpack_numpy.unpackb(await websocket.recv())
+
+                if isinstance(payload, dict) and payload.get(_OP_KEY) == _OP_RESET:
+                    self._policy.reset()
+                    await websocket.send(packer.pack({_RESET_ACK_KEY: True}))
+                    continue
+
+                if isinstance(payload, dict) and payload.get(_OP_KEY) == _OP_STEP:
+                    obs = payload["obs"]
+                    action = self._policy.step(obs)
+                    await websocket.send(packer.pack({_ACTION_KEY: action}))
+                    continue
+
+                # Backward compatibility for old clients: payload is directly the observation dict.
+                action = self._policy.step(payload)
                 await websocket.send(packer.pack(action))
             except websockets.ConnectionClosed:
                 logging.info(f"Connection from {websocket.remote_address} closed")

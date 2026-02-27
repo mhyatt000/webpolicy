@@ -86,6 +86,12 @@ def test_server_client_roundtrip_with_dummy_policy():
         action2 = ws_client.step(obs)
         np.testing.assert_array_equal(action2["action"], np.array([2.0, 3.0], dtype=np.float32))
         np.testing.assert_array_equal(action2["call_count"], np.array([2], dtype=np.int32))
+
+        ws_client.reset()
+
+        action3 = ws_client.step(obs)
+        np.testing.assert_array_equal(action3["action"], np.array([2.0, 3.0], dtype=np.float32))
+        np.testing.assert_array_equal(action3["call_count"], np.array([1], dtype=np.int32))
     finally:
         if ws_client is not None:
             ws_client._ws.close()
