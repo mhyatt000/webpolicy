@@ -39,7 +39,11 @@ class ActionChunkBroker(_base_policy.BasePolicy):
         return results
 
     @override
-    def reset(self) -> None:
-        self._policy.reset()
+    def reset(self, payload: Dict | None = None) -> None:
+        payload = payload or {}
+        if payload:
+            self._policy.reset(payload)
+        else:
+            self._policy.reset()
         self._last_results = None
         self._cur_step = 0

@@ -62,7 +62,11 @@ class Server:
                 payload = msgpack_numpy.unpackb(await websocket.recv())
 
                 if isinstance(payload, dict) and payload.get(_OP_KEY) == _OP_RESET:
-                    self._policy.reset()
+                    reset_payload = payload.get("payload", {})
+                    if reset_payload == {}:
+                        self._policy.reset()
+                    else:
+                        self._policy.reset(reset_payload)
                     await websocket.send(packer.pack({_RESET_ACK_KEY: True}))
                     continue
 

@@ -59,8 +59,14 @@ class Client(_base_policy.BasePolicy):
         return unpacked
 
     @override
-    def reset(self) -> None:
-        self._ws.send(self._packer.pack({_OP_KEY: _OP_RESET}))
+    def reset(self, payload: Dict | None = None) -> None:
+        payload = payload or {}
+
+        reset_request = {_OP_KEY: _OP_RESET}
+        if payload:
+            reset_request["payload"] = payload
+
+        self._ws.send(self._packer.pack(reset_request))
         response = self._ws.recv()
         if isinstance(response, str):
             raise RuntimeError(f"Error in inference server reset:\n{response}")
