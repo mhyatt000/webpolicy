@@ -1,5 +1,7 @@
 import numpy as np
+import pytest
 
+pytest.importorskip("PIL")
 from webpolicy import image_tools
 
 

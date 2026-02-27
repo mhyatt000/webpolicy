@@ -6,7 +6,7 @@ from typing import Any
 from pydantic import BaseModel, ValidationError
 
 
-def validate(struct: type[BaseModel]) -> Callable[[Callable[[dict], Any]], Callable[[dict], Any]]:
+def inp(struct: type[BaseModel]) -> Callable[[Callable[[dict], Any]], Callable[[dict], Any]]:
     """Validate input dict against `struct` before running `fn`."""
 
     def _decorator(fn: Callable[[dict], Any]) -> Callable[[dict], Any]:
@@ -21,7 +21,7 @@ def validate(struct: type[BaseModel]) -> Callable[[Callable[[dict], Any]], Calla
             elif len(args) >= 2:
                 payload = args[1]
             else:
-                raise TypeError("validate wrapper could not find input dict argument")
+                raise TypeError("inp wrapper could not find input dict argument")
 
             try:
                 struct.model_validate(payload)
@@ -29,6 +29,25 @@ def validate(struct: type[BaseModel]) -> Callable[[Callable[[dict], Any]], Calla
                 print(e.errors())          # structured list
                 raise e
             return fn(*args, **kwargs)
+
+        return _wrapped
+
+    return _decorator
+
+
+def out(struct: type[BaseModel]) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    """Validate function output against `struct` before returning it."""
+
+    def _decorator(fn: Callable[..., Any]) -> Callable[..., Any]:
+        @wraps(fn)
+        def _wrapped(*args: Any, **kwargs: Any) -> Any:
+            result = fn(*args, **kwargs)
+            try:
+                struct.model_validate(result)
+            except ValidationError as e:
+                print(e.errors())          # structured list
+                raise e
+            return result
 
         return _wrapped
 

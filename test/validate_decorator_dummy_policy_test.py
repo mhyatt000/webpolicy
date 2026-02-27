@@ -3,7 +3,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from webpolicy.base_policy import BasePolicy
-from webpolicy.deco.validate import validate
+from webpolicy.deco.validate import inp
 
 
 class ObsModel(BaseModel):
@@ -12,7 +12,7 @@ class ObsModel(BaseModel):
 
 
 class DummyPolicy(BasePolicy):
-    @validate(ObsModel)
+    @inp(ObsModel)
     def step(self, obs: dict) -> dict:
         # Uses the original dict passed into step.
         return {
@@ -25,7 +25,7 @@ class DummyPolicy(BasePolicy):
         pass
 
 
-def test_dummy_policy_step_with_validate_decorator_accepts_coercible_input():
+def test_dummy_policy_step_with_inp_decorator_accepts_coercible_input():
     policy = DummyPolicy()
     obs = {"id": "123", "name": "Alice"}
 
@@ -36,7 +36,7 @@ def test_dummy_policy_step_with_validate_decorator_accepts_coercible_input():
     np.testing.assert_array_equal(action["action"], np.array([1], dtype=np.int32))
 
 
-def test_dummy_policy_step_with_validate_decorator_rejects_invalid_input():
+def test_dummy_policy_step_with_inp_decorator_rejects_invalid_input():
     policy = DummyPolicy()
 
     with pytest.raises(ValidationError):
